@@ -29,20 +29,22 @@ The key goes in the environment (`ONEPRESS_API_KEY`), created at
 Submit a task describing the episode — topic or source material, target length,
 tone, voice preference:
 
-```bash
-curl -s -X POST https://www.getonepress.com/api/v1/conversations \
-  -H "Authorization: Bearer $ONEPRESS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Create a ~10-minute podcast episode on <topic>. Tone: <tone>. Use <voice notes>.", "title": "<title>"}'
-# → 202 {"conversationId":"conv_..."}
+```
+POST https://www.getonepress.com/api/v1/conversations
+Authorization: Bearer $ONEPRESS_API_KEY
+Content-Type: application/json
+
+{"message": "Create a ~10-minute podcast episode on <topic>. Tone: <tone>. Use <voice notes>.", "title": "<title>"}
+→ 202 {"conversationId":"conv_..."}
 ```
 
 Poll until done (audio tasks take a few minutes):
 
-```bash
-curl -s https://www.getonepress.com/api/v1/conversations/conv_... \
-  -H "Authorization: Bearer $ONEPRESS_API_KEY"
-# status "done" → answer + preview_path (workspace-relative, e.g. "Audio/xxx.mp3")
+```
+GET https://www.getonepress.com/api/v1/conversations/conv_...
+Authorization: Bearer $ONEPRESS_API_KEY
+
+→ status "done": answer + preview_path (workspace-relative, e.g. "Audio/xxx.mp3")
 ```
 
 Follow-ups (`POST` same conversation id) keep context — "make it shorter", "more energy".
