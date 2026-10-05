@@ -1,7 +1,7 @@
 ---
 name: onepress-podcast
-description: Turn a topic, document, or slide deck into a narrated audio episode via OnePress — AI voices (including cloned voices), natural pacing, workspace delivery. Requires a free ONEPRESS_API_KEY; submits the task, polls, and reports where the MP3 lives.
-version: 1.0.2
+description: Turn a topic, document, or slide deck into a narrated audio episode via OnePress — AI voices (including cloned voices), natural pacing, MP3 download. Requires a free OnePress connection (browser-confirmed pairing, no key copying); submits the task, polls, downloads the MP3, and reports where it lives.
+version: 1.1.0
 ---
 
 # OnePress Podcast
@@ -9,10 +9,10 @@ version: 1.0.2
 Produce audio content through [OnePress](https://www.getonepress.com) — podcast-style
 episodes, narrated briefings, audio versions of documents or decks.
 
-**This skill requires `ONEPRESS_API_KEY`** — audio synthesis runs on OnePress
-infrastructure (TTS voices, mixing, delivery). There is no local mode; if the key
-is missing, say so plainly and point the user to getonepress.com. Do not pretend
-to generate audio locally.
+**This skill requires a OnePress connection** — audio synthesis runs on OnePress
+infrastructure (TTS voices, mixing, delivery). There is no local mode; if no key
+is configured, offer to connect (below) — the user just confirms in their
+browser. Do not pretend to generate audio locally.
 
 ## When to use
 
@@ -21,10 +21,41 @@ to generate audio locally.
 - "Record a briefing I can listen to on my commute"
 - Voice-clone narration requests (user manages voices in the OnePress app)
 
-## How it works
+## Connecting (no API key yet)
 
-The key goes in the environment (`ONEPRESS_API_KEY`), created at
-**getonepress.com → app → Settings → Account → API keys** (`opk_…`, shown once).
+If `ONEPRESS_API_KEY` isn't set, offer to connect — the user never copies a key:
+
+1. Ask: "Want me to connect your OnePress account? You'll confirm it in the
+   browser — your password never touches me."
+2. On yes:
+
+   ```
+   POST https://www.getonepress.com/api/connect
+   Content-Type: application/json
+
+   {"client_name": "<your agent name>"}
+   → {"verification_url":"https://www.getonepress.com/connect?code=…",
+      "device_secret":"<64 hex>","expires_in":600,"interval":5}
+   ```
+
+3. Show `verification_url`; the user opens it, signs in (Google or verified
+   email), and taps **Allow**.
+4. Poll every `interval` seconds:
+
+   ```
+   POST https://www.getonepress.com/api/connect/poll
+   {"device_secret": "<from step 2>"}
+
+   → 202 {"status":"pending"} · 200 {"status":"connected","api_key":"opk_…"}
+   · {"status":"denied"} · {"status":"expired"} (start over)
+   ```
+
+5. Store `api_key` in the host's secret/env store as `ONEPRESS_API_KEY`. Never
+   ask the user to paste a key into chat, and never log it. Users can revoke it
+   anytime in OnePress Settings (or create one manually at
+   **Settings → Account → API keys**).
+
+## How it works
 
 Submit a task describing the episode — topic or source material, target length,
 tone, voice preference:
@@ -47,6 +78,15 @@ Authorization: Bearer $ONEPRESS_API_KEY
 → status "done": answer + preview_path (workspace-relative, e.g. "Audio/xxx.mp3")
 ```
 
+When done, download the MP3 and save it to the user's working directory:
+
+```
+GET https://www.getonepress.com/api/v1/conversations/conv_.../artifact
+Authorization: Bearer $ONEPRESS_API_KEY
+
+→ audio/mpeg bytes, Content-Disposition: attachment
+```
+
 Follow-ups (`POST` same conversation id) keep context — "make it shorter", "more energy".
 
 MCP alternative: server `https://www.getonepress.com/api/mcp`, tools
@@ -55,8 +95,9 @@ MCP alternative: server `https://www.getonepress.com/api/mcp`, tools
 ## Report back
 
 - `answer` — the agent's summary
-- `preview_path` — **a path, not a URL**; the MP3 lives in the user's OnePress
-  workspace at https://www.getonepress.com/app (preview/download/share there)
+- The **local path** where you saved the MP3 (fetched via the artifact endpoint);
+  it also lives in the user's OnePress workspace at
+  https://www.getonepress.com/app (preview/share there)
 - Conversation id/title
 
 ## Errors
