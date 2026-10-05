@@ -1,7 +1,7 @@
 ---
 name: onepress-podcast
 description: Turn a topic, document, or slide deck into a narrated audio episode via OnePress — AI voices (including cloned voices), natural pacing, workspace delivery. Requires a free ONEPRESS_API_KEY; submits the task, polls, and reports where the MP3 lives.
-version: 1.0.0
+version: 1.0.2
 ---
 
 # OnePress Podcast
