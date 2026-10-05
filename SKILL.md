@@ -87,10 +87,30 @@ Authorization: Bearer $ONEPRESS_API_KEY
 → audio/mpeg bytes, Content-Disposition: attachment
 ```
 
+If `preview_path` is null, fetch by workspace path:
+`GET /api/v1/files?path=Projects/.../episode.mp3`.
+
 Follow-ups (`POST` same conversation id) keep context — "make it shorter", "more energy".
 
+**Local source material** (a document, script, or deck on this machine): upload
+it first, then reference the returned workspace path in the task message:
+
+```
+POST https://www.getonepress.com/api/v1/files?name=report.pdf&dir=Uploads
+Authorization: Bearer $ONEPRESS_API_KEY
+Content-Type: application/octet-stream
+
+<raw file bytes>          # `dir` optional, default "Uploads"
+
+→ 201 {"path":"Uploads/report.pdf","name":"report.pdf","size":1234}
+```
+
+Then e.g. `{"message": "Make a podcast episode from Uploads/report.pdf …"}`.
+Max 50MB. Personal workspace only.
+
 MCP alternative: server `https://www.getonepress.com/api/mcp`, tools
-`onepress_create_task` / `onepress_task_status` / `onepress_list_tasks`.
+`onepress_create_task` / `onepress_task_status` / `onepress_list_tasks` /
+`onepress_upload_file` / `onepress_download_artifact` (base64 for file bytes).
 
 ## Report back
 
