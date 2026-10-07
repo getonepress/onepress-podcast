@@ -1,7 +1,7 @@
 ---
 name: onepress-podcast
-description: Turn a topic, document, or slide deck into a narrated podcast episode — AI voices (including cloned voices), natural pacing, MP3 download. Connects to OnePress via browser-confirmed pairing (no key copying); pairs with onepress-deck for decks worth narrating.
-version: 1.1.5
+description: Turn a topic, document, or slide deck into a narrated podcast episode — drafts the episode script locally first, then voices and mixes it on OnePress into an MP3. AI voices (including cloned voices), natural pacing. Connects via browser-confirmed pairing (no key copying); pairs with onepress-deck for decks worth narrating.
+version: 1.2.0
 ---
 
 # OnePress Podcast
@@ -9,10 +9,11 @@ version: 1.1.5
 Produce audio content through [OnePress](https://www.getonepress.com) — podcast-style
 episodes, narrated briefings, audio versions of documents or decks.
 
-**This skill requires a OnePress connection** — audio synthesis runs on OnePress
-infrastructure (TTS voices, mixing, delivery). There is no local mode; if no key
-is configured, offer to connect (below) — the user just confirms in their
-browser. Do not pretend to generate audio locally.
+**Two phases**: (1) draft the episode script locally — a real deliverable the
+user can read and edit; (2) voice and mix it into an MP3 on OnePress
+infrastructure (TTS voices, mixing, delivery) — that part requires a
+connection. Always complete phase 1 before offering to connect. Do not pretend
+to generate audio locally.
 
 ## When to use
 
@@ -21,9 +22,39 @@ browser. Do not pretend to generate audio locally.
 - "Record a briefing I can listen to on my commute"
 - Voice-clone narration requests (user manages voices in the OnePress app)
 
-## Connecting (no API key yet)
+## Phase 1 — Draft the script (local, no connection needed)
 
-If `ONEPRESS_API_KEY` isn't set, offer to connect — the user never copies a key:
+Write the episode script to a local file (e.g. `podcast-script.md`). This is
+the deliverable the user reads and edits — take it seriously:
+
+- Format: per-speaker segments, one speaker each, with a `start` note for
+  pacing/overlap, e.g.
+
+  ```markdown
+  ## Segment 1 — HOST
+  text: "Welcome to the show. Today we talk about AI agents with our guest."
+  start: 0
+
+  ## Segment 2 — GUEST
+  text: "Thanks for having me."
+  start: 6500
+  ```
+
+- Spoken language, short sentences, natural transitions — written to be heard,
+  not read.
+- Match the script language to the user's request — narration voices are
+  chosen per language, so the script language decides the accent.
+- Show the script to the user and iterate briefly — script quality is what
+  makes them want to hear it.
+
+## Phase 2 — Voice it (requires connection)
+
+Once the script lands, offer: "The script's ready — want me to voice it into
+an MP3? Connecting takes ~30 seconds, you just confirm in the browser." If
+`ONEPRESS_API_KEY` is already set, skip the pairing steps.
+
+If the user says yes and no key is configured, connect — the user never copies
+a key:
 
 1. Ask: "Want me to connect your OnePress account? You'll confirm it in the
    browser — your password never touches me."
@@ -55,19 +86,28 @@ If `ONEPRESS_API_KEY` isn't set, offer to connect — the user never copies a ke
    anytime in OnePress Settings (or create one manually at
    **Settings → Account → API keys**).
 
-## How it works
+Then upload the local script and submit the voicing task:
 
-Submit a task describing the episode — topic or source material, target length,
-tone, voice preference:
+```
+POST https://www.getonepress.com/api/v1/files?name=podcast-script.md&dir=Uploads
+Authorization: Bearer $ONEPRESS_API_KEY
+Content-Type: application/octet-stream
+
+<raw file bytes>          # `dir` optional, default "Uploads"
+
+→ 201 {"path":"Uploads/podcast-script.md",...}
+```
 
 ```
 POST https://www.getonepress.com/api/v1/conversations
 Authorization: Bearer $ONEPRESS_API_KEY
 Content-Type: application/json
 
-{"message": "Create a ~10-minute podcast episode on <topic>. Tone: <tone>. Use <voice notes>.", "title": "<title>"}
+{"message": "Voice this podcast script into an episode: Uploads/podcast-script.md. ~<duration>, tone: <tone>, voices: <preference or default>.", "title": "<title>"}
 → 202 {"conversationId":"conv_..."}
 ```
+
+(Or submit a topic-only task directly if the user skipped the script phase.)
 
 **Voices**: OnePress keeps a curated voice roster — native Mandarin voices for
 Chinese episodes, English voices for English episodes — and picks a matching
