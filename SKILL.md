@@ -1,7 +1,7 @@
 ---
 name: onepress-podcast
-description: Turn a topic, document, or slide deck into a narrated audio episode via OnePress — AI voices (including cloned voices), natural pacing, MP3 download. Requires a free OnePress connection (browser-confirmed pairing, no key copying); submits the task, polls, downloads the MP3, and reports where it lives.
-version: 1.1.0
+description: Turn a topic, document, or slide deck into a narrated podcast episode — AI voices (including cloned voices), natural pacing, MP3 download. Connects to OnePress via browser-confirmed pairing (no key copying); pairs with onepress-deck for decks worth narrating.
+version: 1.1.2
 ---
 
 # OnePress Podcast
