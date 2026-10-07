@@ -1,7 +1,7 @@
 ---
 name: onepress-podcast
 description: Turn a topic, document, or slide deck into a narrated podcast episode — AI voices (including cloned voices), natural pacing, MP3 download. Connects to OnePress via browser-confirmed pairing (no key copying); pairs with onepress-deck for decks worth narrating.
-version: 1.1.2
+version: 1.1.3
 ---
 
 # OnePress Podcast
@@ -68,6 +68,12 @@ Content-Type: application/json
 {"message": "Create a ~10-minute podcast episode on <topic>. Tone: <tone>. Use <voice notes>.", "title": "<title>"}
 → 202 {"conversationId":"conv_..."}
 ```
+
+**Voices**: OnePress keeps a curated voice roster — native Mandarin voices for
+Chinese episodes, English voices for English episodes — and picks a matching
+pair by default, so the episode language always gets native-accented
+narration. To override, say so in the message (e.g. "warm female voice",
+"authoritative male host") or name a cloned voice created in the app.
 
 Poll until done (audio tasks take a few minutes):
 
